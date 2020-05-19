@@ -9,7 +9,7 @@ data Empleado = UnEmpleado{
 
 --Algunos empleados de ejemplo
 palermo::Empleado
-palermo = UnEmpleado "Martin Palermo" "Gerente de Operaciones" 100000
+palermo = UnEmpleado "Martin Palermo" "Gerente de Produccion" 100000
 riquelme::Empleado
 riquelme = UnEmpleado "Juan Roman Riquelme" "Analista de Sistemas" 30000
 bianchi::Empleado
@@ -76,4 +76,9 @@ nosAhorramosGuita empleados propuesta = sum (map gananciaEmpleado empleados) - s
 --5) Realizar ciertas transformaciones sobre una lista de empleados:
 --a) conLosOjosCerrados: quedarse con un solo “Ingeniero Capo Master” y el resto de “Backend developer” que haya. 
 --(Quedarse con el primer o el ultimo “Ingeniero Capo Master” queda a libre decisión).
---conLosOjosCerrados::
+--conLosOjosCerrados empleados = 
+
+
+--b) reducciónViolenta: reducir en un número fijo todos los salarios de la empresa.
+reduccionViolenta::[Empleado]->Float->[Empleado]
+reduccionViolenta empleados cantidad = map (disminuirSalarioEn cantidad) empleados
