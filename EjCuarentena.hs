@@ -1,4 +1,5 @@
 import Text.Show.Functions
+import Data.List
 
 --De cada empleado se conoce su nombre, su rol y cuánto gana por mes. 
 data Empleado = UnEmpleado{
@@ -45,6 +46,8 @@ irresponsable::Empleado->Empleado
 irresponsable = disminuirSalarioEn 5000
 suspension::Empleado->Empleado
 suspension = propuestaLaboral "Suspendido" (cambiarSalarioA 0) 
+eficiente::Empleado->Empleado
+eficiente empleado = propuestaLaboral (rolEmpleado empleado ++ " Plus") (aumentarSalarioEn (gananciaEmpleado empleado)) empleado
 cambioSegunSueldo::Empleado->Empleado
 cambioSegunSueldo empleado
  | gananciaEmpleado empleado > 80000 = disminuirSalarioEn 10000 empleado
@@ -64,8 +67,14 @@ propuestaDudosa propuesta empleados = any (propuestaIlegal propuesta) empleados
 
 
 --3) Dada una lista de propuestas, saber cuánto ganaría ahora el trabajador si elige la que más le conviene.
-mejorGanancia::Empleado->[(Empleado->Empleado)]->Float
-mejorGanancia empleado propuestas = (maximum.(map gananciaEmpleado).(map (\propuesta->propuesta empleado))) propuestas
+aplicarPropuestasAEmpleado::[(Empleado->Empleado)]->Empleado->[Empleado]
+aplicarPropuestasAEmpleado propuestas empleado = map (\propuesta->propuesta empleado) propuestas 
+
+listaGananciasDeEmpleados::[Empleado]->[Float]
+listaGananciasDeEmpleados empleados = map gananciaEmpleado empleados
+
+gananciaDeMejorPropuestaAEmpleado::[(Empleado->Empleado)]->Empleado->Float
+gananciaDeMejorPropuestaAEmpleado propuestas empleado = (maximum.listaGananciasDeEmpleados.aplicarPropuestasAEmpleado propuestas) empleado
 
 
 --4) nosAhorramosGuita: saber cuánta plata se ahorra la empresa si hace una propuesta única a muchos empleados al mismo tiempo y todos la aceptan.
@@ -76,9 +85,41 @@ nosAhorramosGuita empleados propuesta = sum (map gananciaEmpleado empleados) - s
 --5) Realizar ciertas transformaciones sobre una lista de empleados:
 --a) conLosOjosCerrados: quedarse con un solo “Ingeniero Capo Master” y el resto de “Backend developer” que haya. 
 --(Quedarse con el primer o el ultimo “Ingeniero Capo Master” queda a libre decisión).
---conLosOjosCerrados empleados = 
+condicionRol::Empleado->Bool
+condicionRol empleado = 
+ rolEmpleado empleado == "Ingeniero Capo Master" || rolEmpleado empleado == "Ingeniero Capo Master Plus" ||
+ rolEmpleado empleado == "Backend Developer" || rolEmpleado empleado == "Backend Developer Plus"
 
+--condicionUnIngeniero 
+
+conLosOjosCerrados::[Empleado]->[Empleado]
+conLosOjosCerrados empleados = (filter condicionRol empleados)
+--FALTA EVITAR QUE SE QUEDE CON MAS DE UN INGENIERO CAPO MASTER
 
 --b) reducciónViolenta: reducir en un número fijo todos los salarios de la empresa.
 reduccionViolenta::[Empleado]->Float->[Empleado]
 reduccionViolenta empleados cantidad = map (disminuirSalarioEn cantidad) empleados
+
+
+--c) propuestaGeneral: darle una lista de propuestas a todos los trabajadores de una empresa, donde cada uno elija la que más le conviene y la acepte. 
+--Podríamos por ejemplo darle a todos los empleados la elección entre cambiar su rol y ganar 10000 pesos más o cambiar su rol y ganar el doble que antes.
+--La función debe retornar cómo quedan los empleados luego de aceptar las propuestas.
+aplicarPropuestasAEmpleados::[(Empleado->Empleado)]->[Empleado]->[[Empleado]]
+aplicarPropuestasAEmpleados propuestas empleados = map (aplicarPropuestasAEmpleado propuestas) empleados
+
+esGananciaMaxima::[Empleado]->Empleado->Bool
+esGananciaMaxima empleados empleado = maximum (listaGananciasDeEmpleados empleados) == gananciaEmpleado empleado
+
+empleadoConMejorGanancia::[Empleado]->Empleado
+empleadoConMejorGanancia empleados = (head.filter (esGananciaMaxima empleados)) empleados
+--empleadoConMejorGanancia2 empleados = filter (\empleado->(maximum.listaGananciasDeEmpleados) empleados == gananciaEmpleado empleado) empleados
+
+propuestaGeneral::[(Empleado->Empleado)]->[Empleado]->[Empleado]
+propuestaGeneral propuestas empleados =  map empleadoConMejorGanancia ((aplicarPropuestasAEmpleados propuestas) empleados)
+
+
+--d) soloLosQueCobranPoco: quedarse sólo con los que ganan menos que el promedio.
+--Por ejemplo, podríamos usarla diciendo: soloLosQueCobranPoco [empleado1, empleado2]
+
+
+--e) Inventar una nueva transformación que en al menos una parte use una lambda con aplicación parcial.
