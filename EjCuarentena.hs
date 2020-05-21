@@ -120,6 +120,23 @@ propuestaGeneral propuestas empleados =  map empleadoConMejorGanancia ((aplicarP
 
 --d) soloLosQueCobranPoco: quedarse sólo con los que ganan menos que el promedio.
 --Por ejemplo, podríamos usarla diciendo: soloLosQueCobranPoco [empleado1, empleado2]
+ganaMenosQue::Float->Empleado->Bool
+ganaMenosQue cantidad empleado = gananciaEmpleado empleado < cantidad
+
+soloLosQueCobranPoco::[Empleado]->[Empleado]
+soloLosQueCobranPoco empleados = filter (ganaMenosQue promedio) empleados 
+ where promedio =  gananciasTotales / cantEmpleados
+       gananciasTotales = ((sum.map gananciaEmpleado) empleados)
+       cantEmpleados = fromIntegral (length empleados)
+--Quise probar los usos del where
 
 
 --e) Inventar una nueva transformación que en al menos una parte use una lambda con aplicación parcial.
+
+--Para usar aplicacion parcial con la lambda cree otra funcion, pero podría haber usado la variable empleado directamente en disminuirSalarioEn
+listaDeDisminuciones::[Empleado]->[(Empleado->Empleado)]
+listaDeDisminuciones empleados = map (\empleado-> disminuirSalarioEn (gananciaEmpleado empleado / 2)) empleados
+
+reducirALaMitad::[Empleado]->[Empleado]
+reducirALaMitad empleados = zipWith ($) (listaDeDisminuciones empleados) empleados 
+--PENSAR UNA MEJOR TRANSFORMACION
