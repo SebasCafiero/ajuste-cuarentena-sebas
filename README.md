@@ -1,4 +1,4 @@
-##Ajuste de cuarentena##
+# Ajuste de cuarentena
 
 Techín, fábrica de galletitas, está intentando acortar sus costos por todos lados, y para eso nos pide de raje un sistema para reajustar sus costos laborales. 
 
@@ -20,7 +20,7 @@ Techín, fábrica de galletitas, está intentando acortar sus costos por todos l
     - e. Inventar una nueva transformación que en al menos una parte use una lambda con aplicación parcial.
 
 
-##¿No era sólo para la cuarentena?##
+## ¿No era sólo para la cuarentena?
 
 Visto el éxito de las medidas, y con la cuarentena ya cerrada, Techín decide acelerar su proceso de cambio. Además, nos pide hacer medidas para cada una de sus empresas subsidiarias. De cada una, se conoce su lista de empleados y su presupuesto para salarios.
 
