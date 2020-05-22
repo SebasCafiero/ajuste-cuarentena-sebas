@@ -1,6 +1,7 @@
 import Text.Show.Functions
 import Data.List
 
+--1ra PARTE
 --De cada empleado se conoce su nombre, su rol y cuánto gana por mes. 
 data Empleado = UnEmpleado{
     nombreEmpleado::String,
@@ -140,3 +141,31 @@ listaDeDisminuciones empleados = map (\empleado-> disminuirSalarioEn (gananciaEm
 reducirALaMitad::[Empleado]->[Empleado]
 reducirALaMitad empleados = zipWith ($) (listaDeDisminuciones empleados) empleados 
 --PENSAR UNA MEJOR TRANSFORMACION
+
+
+--2da PARTE
+--Techín decide acelerar su proceso de cambio. Además, nos pide hacer medidas para cada una de sus empresas subsidiarias. 
+--De cada una, se conoce su lista de empleados y su presupuesto para salarios.
+
+data Empresa = UnaEmpresa{
+    empleadosEmpresa::[Empleado],
+    presupuestoEmpresa::Float
+} deriving Show
+
+--Algunas empresas de ejemplo
+grosa,chica,pobre::Empresa
+grosa = UnaEmpresa [bianchi,palermo,delgado] 500000
+chica = UnaEmpresa [palermo,riquelme] 200000
+pobre = UnaEmpresa [insua,ibarra,riquelme] 100000
+
+--1) Dada una lista de transformaciones (propuestaGeneral, soloLosQueCobranPoco, etc), 
+--saber si luego de aplicar todos en serie ahora la subsidiaria puede pagar todos los salarios con su presupuesto
+aplicarEnSerie::[(Empleado->Empleado)]->Empleado->Empleado
+aplicarEnSerie transformaciones empleado = foldr ($) empleado (reverse transformaciones)
+
+transformarEnSerie::[Empleado]->[(Empleado->Empleado)]->[Empleado]
+transformarEnSerie empleados transformaciones = map (aplicarEnSerie transformaciones) empleados
+
+puedePagarSueldos::Empresa->[(Empleado->Empleado)]->Bool
+puedePagarSueldos empresa transformaciones = 
+ (presupuestoEmpresa empresa) >= (sum.listaGananciasDeEmpleados.transformarEnSerie (empleadosEmpresa empresa)) transformaciones
