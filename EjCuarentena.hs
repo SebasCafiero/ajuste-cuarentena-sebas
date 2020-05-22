@@ -22,6 +22,8 @@ insua::Empleado
 insua = UnEmpleado "Federico Insua" "Backend Developer" 80000
 ibarra::Empleado
 ibarra = UnEmpleado "Hugo Ibarra" "Ingeniero Capo Master" 55000
+nandez::Empleado
+nandez = UnEmpleado "Nahitan Nandez" "Carnero" 40000
 
 --A los empleados se les pueden hacer propuestas laborales, que consisten en un nuevo rol y una función a aplicar sobre el salario.
 cambiarRolA::String->Empleado->Empleado
@@ -53,7 +55,9 @@ cambioSegunSueldo::Empleado->Empleado
 cambioSegunSueldo empleado
  | gananciaEmpleado empleado > 80000 = disminuirSalarioEn 10000 empleado
  | gananciaEmpleado empleado > 0 = empleado
- | otherwise = cambiarSalarioA 30000 empleado
+ | otherwise = cambiarSalarioA 25000 empleado
+serCarnero::Empleado->Empleado
+serCarnero = cambiarRolA "Carnero"
 
 
 --1) Saber si una propuesta es ilegal para una persona, que sucede cuando esa propuesta implica una disminución del salario.
@@ -98,8 +102,8 @@ conLosOjosCerrados empleados = (filter condicionRol empleados)
 --FALTA EVITAR QUE SE QUEDE CON MAS DE UN INGENIERO CAPO MASTER
 
 --b) reducciónViolenta: reducir en un número fijo todos los salarios de la empresa.
-reduccionViolenta::[Empleado]->Float->[Empleado]
-reduccionViolenta empleados cantidad = map (disminuirSalarioEn cantidad) empleados
+reduccionViolenta::Float->[Empleado]->[Empleado]
+reduccionViolenta cantidad empleados = map (disminuirSalarioEn cantidad) empleados
 
 
 --c) propuestaGeneral: darle una lista de propuestas a todos los trabajadores de una empresa, donde cada uno elija la que más le conviene y la acepte. 
@@ -153,10 +157,11 @@ data Empresa = UnaEmpresa{
 } deriving Show
 
 --Algunas empresas de ejemplo
-grosa,chica,pobre::Empresa
+grosa,chica,pobre,pyme::Empresa
 grosa = UnaEmpresa [bianchi,palermo,delgado] 500000
 chica = UnaEmpresa [palermo,riquelme] 200000
 pobre = UnaEmpresa [insua,ibarra,riquelme] 100000
+pyme = UnaEmpresa [ibarra,insua,nandez] 160000
 
 --1) Dada una lista de transformaciones (propuestaGeneral, soloLosQueCobranPoco, etc), 
 --saber si luego de aplicar todos en serie ahora la subsidiaria puede pagar todos los salarios con su presupuesto
@@ -169,3 +174,27 @@ transformarEnSerie empleados transformaciones = map (aplicarEnSerie transformaci
 puedePagarSueldos::Empresa->[(Empleado->Empleado)]->Bool
 puedePagarSueldos empresa transformaciones = 
  (presupuestoEmpresa empresa) >= (sum.listaGananciasDeEmpleados.transformarEnSerie (empleadosEmpresa empresa)) transformaciones
+
+
+--2) Ordenar una serie de subsidiarias en base a su Coeficiente de Huelgosidad (™, patente pendiente) que se calcula como:
+--a. 1 punto por cada vez que tiene que reducir todos los salarios en 5000 para tener suficiente presupuesto.
+--b. 10 puntos si no tiene ningún trabajador de rol “Carnero”.
+ningunCarnero::Empresa->Bool
+ningunCarnero empresa = all (\empleado->"Carnero" /= (rolEmpleado empleado)) (empleadosEmpresa empresa)
+
+coeficienteHuelgosidad::Empresa->Int
+coeficienteHuelgosidad empresa
+ |not (puedePagarSueldos empresa []) = 
+     1 + coeficienteHuelgosidad (empresa{empleadosEmpresa = transformarEnSerie (empleadosEmpresa empresa) [disminuirSalarioEn 5000]}) 
+ |ningunCarnero empresa = 10
+ |otherwise = 0
+
+--ordenarSegunHuelgosidad::[Empresa]->[Empresa]
+--ordenarSegunHuelgosidad empresas = map coeficienteHuelgosidad empresas
+--ordenarSegunHuelgosidad (empresa:restoDeEmpresas) = foldl 
+
+
+--3) Si utilizamos una subsidiaria con infinitos empleados, ¿qué puntos funcionan? ¿qué puntos no?
+--Tanto el pto1 como el pto2 al sumarse una lista generada por cada empleado nunca se podria ejecutar y se trabaria.
+--En el pto2 tambien se utiliza el all para detectar a los Carneros, por lo que tampoco se podra cumplir el all hasta recorrer toda la lista.
+--Solo podrian funcionar en aquellos casos en los que baste la evaluacion diferida alcanzando la respuesta antes de recorrer toda la lista.
