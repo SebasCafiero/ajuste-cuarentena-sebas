@@ -7,7 +7,7 @@ data Empleado = UnEmpleado{
     nombreEmpleado::String,
     rolEmpleado::String,
     gananciaEmpleado::Float
-} deriving Show
+} deriving (Show,Eq)
 
 --Algunos empleados de ejemplo
 palermo::Empleado
@@ -90,22 +90,15 @@ nosAhorramosGuita empleados propuesta = sum (map gananciaEmpleado empleados) - s
 --5) Realizar ciertas transformaciones sobre una lista de empleados:
 --a) conLosOjosCerrados: quedarse con un solo “Ingeniero Capo Master” y el resto de “Backend developer” que haya. 
 --(Quedarse con el primer o el ultimo “Ingeniero Capo Master” queda a libre decisión).
-condicionRol::Empleado->Bool
-condicionRol empleado = 
- ((esRol "Ingeniero Capo Master" empleado) || (esRol "Backend Developer" empleado) || 
- (esRol "Ingeniero Capo Master Plus" empleado) || (esRol "Backend Developer Plus" empleado))
-
 esRol::String->Empleado->Bool
 esRol rol empleado = rolEmpleado empleado == rol
 
-noRepetirIngeniero::[Empleado]->[Empleado]
-noRepetirIngeniero (x:xs)
- | elem
-
 conLosOjosCerrados::[Empleado]->[Empleado]
-conLosOjosCerrados empleados = noRepetirIngeniero (filter condicionRol empleados)
+conLosOjosCerrados empleados = (head (filter esIngeniero empleados)):(filter esDeveloper empleados)
+ where esIngeniero empleado = ((esRol "Ingeniero Capo Master" empleado) || (esRol "Ingeniero Capo Master Plus" empleado))
+       esDeveloper empleado = ((esRol "Backend Developer" empleado) || (esRol "Backend Developer Plus" empleado))
+--QUIZAS HAY UNA MEJOR FORMA SIN FILTRAR DOS VECES LA LISTA DE EMPLEADOS
 
---FALTA EVITAR QUE SE QUEDE CON MAS DE UN INGENIERO CAPO MASTER
 
 --b) reducciónViolenta: reducir en un número fijo todos los salarios de la empresa.
 reduccionViolenta::Float->[Empleado]->[Empleado]
@@ -160,7 +153,7 @@ reducirALaMitad empleados = zipWith ($) (listaDeDisminuciones empleados) emplead
 data Empresa = UnaEmpresa{
     empleadosEmpresa::[Empleado],
     presupuestoEmpresa::Float
-} deriving Show
+} deriving (Show,Eq)
 
 --Algunas empresas de ejemplo
 grosa,chica,pobre,pyme::Empresa
@@ -195,12 +188,34 @@ coeficienteHuelgosidad empresa
  |ningunCarnero empresa = 10
  |otherwise = 0
 
---ordenarSegunHuelgosidad::[Empresa]->[Empresa]
---ordenarSegunHuelgosidad empresas = map coeficienteHuelgosidad empresas
---ordenarSegunHuelgosidad (empresa:restoDeEmpresas) = foldl 
+mayorHuelgosidad::[Empresa]->Empresa->Bool
+mayorHuelgosidad empresas empresa = coeficienteHuelgosidad empresa >= maximum (map coeficienteHuelgosidad empresas)
+
+empresaConMayorHuelgosidad::[Empresa]->Empresa
+empresaConMayorHuelgosidad empresas = foldl1 mayorHuelgosidadEntreDos empresas
+
+mayorHuelgosidadEntreDos::Empresa->Empresa->Empresa
+mayorHuelgosidadEntreDos empresa1 empresa2
+ | coeficienteHuelgosidad empresa1 < coeficienteHuelgosidad empresa2 = empresa2
+ | otherwise = empresa1
+
+quitarEmpresa::[Empresa]->Empresa->[Empresa]
+quitarEmpresa [] _ = []
+quitarEmpresa (empresa:restoDeEmpresas) aQuitar
+ | empresa == aQuitar = quitarEmpresa restoDeEmpresas aQuitar
+ | otherwise = empresa:(quitarEmpresa restoDeEmpresas aQuitar)
+
+ordenarSegunHuelgosidad::[Empresa]->[Empresa]
+ordenarSegunHuelgosidad [] = []
+ordenarSegunHuelgosidad empresas
+ | mayorHuelgosidad empresas (head empresas) = (head empresas):ordenarSegunHuelgosidad (tail empresas)
+ | otherwise = ordenarSegunHuelgosidad ((empresaConMayorHuelgosidad empresas):(quitarEmpresa empresas (empresaConMayorHuelgosidad empresas)))
+--ABSTRAER MEJOR Y QUE NO QUITE EMPRESAS IGUALES
 
 
 --3) Si utilizamos una subsidiaria con infinitos empleados, ¿qué puntos funcionan? ¿qué puntos no?
---Tanto el pto1 como el pto2 al sumarse una lista generada por cada empleado nunca se podria ejecutar y se trabaria.
---En el pto2 tambien se utiliza el all para detectar a los Carneros, por lo que tampoco se podra cumplir el all hasta recorrer toda la lista.
---Solo podrian funcionar en aquellos casos en los que baste la evaluacion diferida alcanzando la respuesta antes de recorrer toda la lista.
+{-
+Tanto el pto1 como el pto2 al sumarse una lista generada por cada empleado nunca se podria ejecutar y se trabaria.
+En el pto2 tambien se utiliza el all para detectar a los Carneros, por lo que tampoco se podra cumplir el all hasta recorrer toda la lista.
+Solo podrian funcionar en aquellos casos en los que baste la evaluacion diferida alcanzando la respuesta antes de recorrer toda la lista.
+-}
