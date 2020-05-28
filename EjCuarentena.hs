@@ -92,13 +92,19 @@ nosAhorramosGuita empleados propuesta = sum (map gananciaEmpleado empleados) - s
 --(Quedarse con el primer o el ultimo “Ingeniero Capo Master” queda a libre decisión).
 condicionRol::Empleado->Bool
 condicionRol empleado = 
- rolEmpleado empleado == "Ingeniero Capo Master" || rolEmpleado empleado == "Ingeniero Capo Master Plus" ||
- rolEmpleado empleado == "Backend Developer" || rolEmpleado empleado == "Backend Developer Plus"
+ ((esRol "Ingeniero Capo Master" empleado) || (esRol "Backend Developer" empleado) || 
+ (esRol "Ingeniero Capo Master Plus" empleado) || (esRol "Backend Developer Plus" empleado))
 
---condicionUnIngeniero 
+esRol::String->Empleado->Bool
+esRol rol empleado = rolEmpleado empleado == rol
+
+noRepetirIngeniero::[Empleado]->[Empleado]
+noRepetirIngeniero (x:xs)
+ | elem
 
 conLosOjosCerrados::[Empleado]->[Empleado]
-conLosOjosCerrados empleados = (filter condicionRol empleados)
+conLosOjosCerrados empleados = noRepetirIngeniero (filter condicionRol empleados)
+
 --FALTA EVITAR QUE SE QUEDE CON MAS DE UN INGENIERO CAPO MASTER
 
 --b) reducciónViolenta: reducir en un número fijo todos los salarios de la empresa.
