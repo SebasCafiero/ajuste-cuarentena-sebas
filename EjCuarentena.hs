@@ -188,9 +188,6 @@ coeficienteHuelgosidad empresa
  |ningunCarnero empresa = 10
  |otherwise = 0
 
-mayorHuelgosidad::[Empresa]->Empresa->Bool
-mayorHuelgosidad empresas empresa = coeficienteHuelgosidad empresa >= maximum (map coeficienteHuelgosidad empresas)
-
 empresaConMayorHuelgosidad::[Empresa]->Empresa
 empresaConMayorHuelgosidad empresas = foldl1 mayorHuelgosidadEntreDos empresas
 
@@ -202,20 +199,19 @@ mayorHuelgosidadEntreDos empresa1 empresa2
 quitarEmpresa::[Empresa]->Empresa->[Empresa]
 quitarEmpresa [] _ = []
 quitarEmpresa (empresa:restoDeEmpresas) aQuitar
- | empresa == aQuitar = quitarEmpresa restoDeEmpresas aQuitar
+ | empresa == aQuitar = restoDeEmpresas --quitarEmpresa restoDeEmpresas aQuitar --Esto saca mas de una empresa si son iguales
  | otherwise = empresa:(quitarEmpresa restoDeEmpresas aQuitar)
 
 ordenarSegunHuelgosidad::[Empresa]->[Empresa]
 ordenarSegunHuelgosidad [] = []
-ordenarSegunHuelgosidad empresas
- | mayorHuelgosidad empresas (head empresas) = (head empresas):ordenarSegunHuelgosidad (tail empresas)
- | otherwise = ordenarSegunHuelgosidad ((empresaConMayorHuelgosidad empresas):(quitarEmpresa empresas (empresaConMayorHuelgosidad empresas)))
---ABSTRAER MEJOR Y QUE NO QUITE EMPRESAS IGUALES
+ordenarSegunHuelgosidad empresas = empresaOrdenada : ordenarSegunHuelgosidad (quitarEmpresa empresas empresaOrdenada)
+ where empresaOrdenada = empresaConMayorHuelgosidad empresas
 
 
 --3) Si utilizamos una subsidiaria con infinitos empleados, ¿qué puntos funcionan? ¿qué puntos no?
 {-
-Tanto el pto1 como el pto2 al sumarse una lista generada por cada empleado nunca se podria ejecutar y se trabaria.
-En el pto2 tambien se utiliza el all para detectar a los Carneros, por lo que tampoco se podra cumplir el all hasta recorrer toda la lista.
-Solo podrian funcionar en aquellos casos en los que baste la evaluacion diferida alcanzando la respuesta antes de recorrer toda la lista.
+    Tanto el pto1 como el pto2 al sumarse una lista generada por cada empleado nunca se podria ejecutar y se trabaria.
+    En el pto2 tambien se utiliza el all para detectar a los Carneros, por lo que tampoco se podra cumplir el all hasta recorrer toda la lista; en este 
+caso funcionaría solo cuando el all da falso porque al hallar un caso que no cumple la condición frena, pero para lograr un verdadero nunca terminaría.
+    Solo podrian funcionar en aquellos casos en los que baste la evaluacion diferida alcanzando la respuesta antes de recorrer toda la lista.
 -}
